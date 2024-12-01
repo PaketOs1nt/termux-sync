@@ -3,9 +3,12 @@ from sync import proto, default
 import threading
 import argparse
 import socket
+import os
 
 default_port = default.port
 default_password = default.password
+
+os.chdir(os.path.expanduser("~"))
 
 def client_worker(server: proto.Server, clsock: socket.socket, addr):
     try:

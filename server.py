@@ -35,6 +35,10 @@ def client_worker(server: proto.Server, clsock: socket.socket, addr):
                 clsock.send(b'auth_error')
                 clsock.close()
 
+    except KeyboardInterrupt:
+        print('stopping...')
+        exit()
+
     except Exception as e:
         print(f'client worker error: {e}')
 
@@ -47,10 +51,6 @@ def server():
             while True:
                 sock, addr = server.accept()
                 threading.Thread(target=client_worker, args=(server, sock, addr), daemon=True).start()
-
-    except KeyboardInterrupt:
-        print('stopping...')
-        exit()
 
     except Exception as e:
         print(f'server error: {e}')

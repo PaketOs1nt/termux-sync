@@ -4,6 +4,7 @@ from sync import default
 import ipaddress
 import threading
 import argparse
+import fnmatch
 import hashlib
 import socket
 import psutil
@@ -83,30 +84,42 @@ def connect(ip: str):
                     print(f'{file}        [{format}]')
             
             elif command.startswith('dl '):
-                path = command[3:]
-                if current_path != '.':
-                    command = f'dl {os.path.join(current_path[2:], path)}'
-                sock.send(command.encode('utf-8'))
-                ftype = sock.recv(1024).decode('utf-8')
+                pathh = command[3:]
+                if '*' in pathh:
+                    sock.send(f'ls {current_path}'.encode('utf-8'))
+                    data = json.loads(sock.recv(4096).decode('utf-8')).keys()
+                    paths = fnmatch.filter(data, pathh)
 
-                raw_fsize = sock.recv(1024)
-                fsize = int.from_bytes(raw_fsize, byteorder='big')
-                
-                print(f'downloading {path} ({fsize} bytes, type: {ftype}) ')
-
-                if not ftype == 'dir':
-                    content = gzip.decompress(sock.recv(fsize))
                 else:
-                    content = sock.recv(fsize)
-    
-                if ftype == 'dir':
-                    path+='.zip'
+                    paths = [path]
 
-                nfile = os.path.join(download_dir, path)
-                with open(nfile, 'wb') as f:
-                    f.write(content)
+                for path in paths:
+                    command = command.replace(pathh, path)
+                    if current_path != '.':
+                        command = f'dl {os.path.join(current_path[2:], path)}'
+
+                    time.sleep(0.5)
+                    sock.send(command.encode('utf-8'))
+                    ftype = sock.recv(1024).decode('utf-8')
+
+                    raw_fsize = sock.recv(1024)
+                    fsize = int.from_bytes(raw_fsize, byteorder='big')
                     
-                print(f'downloaded {path} and saved in {nfile}')
+                    print(f'downloading {path} ({fsize} bytes, type: {ftype}) ')
+
+                    if not ftype == 'dir':
+                        content = gzip.decompress(sock.recv(fsize))
+                    else:
+                        content = sock.recv(fsize)
+        
+                    if ftype == 'dir':
+                        path+='.zip'
+
+                    nfile = os.path.join(download_dir, path)
+                    with open(nfile, 'wb') as f:
+                        f.write(content)
+                        
+                    print(f'downloaded {path} and saved in {nfile}')
             
             elif command.startswith('cd '):
                 path = command[3:]

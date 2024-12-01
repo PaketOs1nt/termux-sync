@@ -33,14 +33,16 @@ class Server:
         return buffer.getvalue()
 
     def dir_structure(self, path: str) -> dict:
-        result = {}
-        for entry in os.scandir(path):
-            if entry.is_file():
-                result[entry.name] = "file"
+        try:
+            result = {}
+            for entry in os.scandir(path):
+                if entry.is_file():
+                    result[entry.name] = "file"
 
-            elif entry.is_dir():
-                result[entry.name] = "dir"
-                
+                elif entry.is_dir():
+                    result[entry.name] = "dir"
+        except:
+            result = {'error': 'dir not exits, return to "."'}    
         return result
 
     def close(self):
@@ -60,16 +62,16 @@ class Server:
 
     def send_data(self, client_sock: socket.socket, path: str):
         if os.path.exists(path):
-            if os.path.isdir(path):
-                data = self.memory_zip(path)
-                ftype = 'dir'
-
-            else:
+            if not os.path.isdir(path):
                 with open(path, mode='rb') as fdataf:
                     data = gzip.compress(fdataf.read())
 
                 ftype = 'file'
 
+            else:
+                data = self.memory_zip(path)
+                ftype = 'dir'
+            
             int_data_size = bytesloader(len(data))
             data_size = int_data_size.to_bytes((int_data_size.bit_length() + 7) // 8, byteorder='big')
             client_sock.send(ftype.encode('utf-8'))

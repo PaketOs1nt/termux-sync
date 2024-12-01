@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import socket
 import psutil
+import gzip
 import time
 import json
 import os
@@ -19,7 +20,7 @@ download_dir = 'downloads'
 if not os.path.exists(download_dir):
     os.makedirs(download_dir)
 
-socket.setdefaulttimeout(3)
+
 
 class Network:
     @staticmethod
@@ -93,7 +94,10 @@ def connect(ip: str):
                 
                 print(f'downloading {path} ({fsize} bytes, type: {ftype}) ')
 
-                content = sock.recv(fsize)
+                if not ftype == 'dir':
+                    content = gzip.decompress(sock.recv(fsize))
+                else:
+                    content = sock.recv(fsize)
     
                 if ftype == 'dir':
                     path+='.zip'
@@ -144,7 +148,9 @@ def main():
         connect(target)
 
     else:
+        socket.setdefaulttimeout(3)
         scanner()
+        socket.setdefaulttimeout(None)
         while True:
             connect(input('[?] enter target ip: '))
 

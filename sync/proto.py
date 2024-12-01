@@ -75,9 +75,9 @@ class Server:
             int_data_size = bytesloader(len(data))
             data_size = int_data_size.to_bytes((int_data_size.bit_length() + 7) // 8, byteorder='big')
             client_sock.send(ftype.encode('utf-8'))
-            time.sleep(0.005)
+            time.sleep(0.05)
             client_sock.send(data_size)
-            time.sleep(0.005)
+            time.sleep(0.05)
             client_sock.send(data)
 
         else:

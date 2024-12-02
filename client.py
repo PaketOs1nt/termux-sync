@@ -94,11 +94,11 @@ def connect(ip: str):
                     paths = [path]
 
                 for path in paths:
-                    command = command.replace(pathh, path)
-                    if current_path != '.':
-                        command = f'dl {os.path.join(current_path[2:], path)}'
-
+                    ftype, fsize, content, raw_fsize, command = None, None, None, None, None
+                    
                     time.sleep(0.5)
+                    command = f'dl {os.path.join(current_path[2:], path)}'
+
                     sock.send(command.encode('utf-8'))
                     ftype = sock.recv(1024).decode('utf-8')
 
